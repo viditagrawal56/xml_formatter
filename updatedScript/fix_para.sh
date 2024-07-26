@@ -11,6 +11,21 @@ usage() {
     exit 1
 }
 
+# function to check for required commands
+check_commands() {
+    for cmd in "$@"; do
+        echo "Checking dependencies..."
+        command -v "$cmd" >/dev/null 2>&1 || { echo >&2 "Error: $cmd is not installed. Please install it and try again."; exit 1; }
+    done
+}
+
+check_os() {
+    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "win32" ]]; then
+        echo "Error: This script is not compatible with Windows. Please run it in a Unix-like environment."
+        exit 1
+    fi
+}
+
 process_xml_files() {
     local dir="$1"
 
@@ -40,6 +55,9 @@ process_xml_files() {
         fi
     done
 }
+
+check_os
+check_commands xmllint diff
 
 # Parse command line options
 while getopts ":fi:" opt; do
