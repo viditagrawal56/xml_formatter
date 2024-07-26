@@ -7,6 +7,7 @@ fix_files=false
 usage() {
     echo "Usage: $0 [-f] path1 [path2 ... pathN]"
     echo "  -f    Fix the XML files instead of just showing differences"
+    echo "  -i indent Set the XML indentation (e.g., '    ' for 4 spaces or $'\t' for a tab)"
     exit 1
 }
 
@@ -29,10 +30,10 @@ process_xml_files() {
             # If the file is an XML file, run the diff command or fix the file
             echo "Processing file: $file"
             if [ "$fix_files" = true ]; then
-                xmllint --format "$file" --output "$file"
+                XMLLINT_INDENT="$XMLLINT_INDENT" xmllint --format "$file" --output "$file"
                 echo "Fixed formatting for file: $file"
             else
-                diff -B --tabsize=4 "$file" <(xmllint --format "$file")
+                diff -B --tabsize=4 "$file" <(XMLLINT_INDENT="$XMLLINT_INDENT" xmllint --format "$file")
             fi
         else
             echo "Skipping non-XML file: $file"
@@ -41,10 +42,13 @@ process_xml_files() {
 }
 
 # Parse command line options
-while getopts ":f" opt; do
+while getopts ":fi:" opt; do
     case $opt in
         f)
             fix_files=true
+            ;;
+        i)
+            XMLLINT_INDENT="$OPTARG"
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
