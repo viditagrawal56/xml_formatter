@@ -3,15 +3,18 @@
 export XMLLINT_INDENT="    "
 fix_files=false
 
-# function to define the usage of the script.
 usage() {
-    echo "Usage: $0 [-f] path1 [path2 ... pathN]"
-    echo "  -f    Fix the XML files instead of just showing differences"
-    echo "  -i indent Set the XML indentation (e.g., '    ' for 4 spaces or $'\t' for a tab)"
+    cat <<EOF
+Usage: $0 [OPTIONS] path1 [path2 ... pathN]
+
+Options:
+  -f          Fix the XML files instead of just showing differences
+  -i indent   Set the XML indentation (e.g., '    ' for 4 spaces or $'\t' for a tab)
+  -h, --help  Show this help message and exit
+EOF
     exit 1
 }
 
-# function to check for required commands
 check_commands() {
     for cmd in "$@"; do
         echo "Checking dependencies..."
@@ -56,9 +59,6 @@ process_xml_files() {
     done
 }
 
-check_os
-check_commands xmllint diff
-
 # Parse command line options
 while getopts ":fi:" opt; do
     case $opt in
@@ -83,6 +83,9 @@ shift $((OPTIND -1))
 # Check if at least one path is provided
 if [ $# -eq 0 ]; then
     usage
+else
+    check_os
+    check_commands xmllint diff
 fi
 
 # Loop through all the provided paths

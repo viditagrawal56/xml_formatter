@@ -1,0 +1,7 @@
+- [x] Make the XMLXMLLINT_INDENT variable configurable.
+- [x] Graceful error handling:- throw an error if xmllint is missing or even if diff is missing.
+- [x] Throw an error early if Windows is detected.
+- [ ] Make the script modular.
+- [ ] Path parameter:- Add support for glob patterns.
+- [ ] GitHub Actions runner.
+- [ ] Write tests for the script.
