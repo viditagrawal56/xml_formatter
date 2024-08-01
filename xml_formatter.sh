@@ -1,94 +1,67 @@
 #!/bin/bash
 
-export XMLLINT_INDENT="    "
-fix_files=false
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$DIR/parse_options.sh"
+source "$DIR/check_os.sh"
+source "$DIR/process_xml_files.sh"
+source "$DIR/check_commands.sh"
 
 usage() {
     cat <<EOF
-Usage: $0 [OPTIONS] path1 [path2 ... pathN]
+Usage: xml_formatter.sh [OPTIONS] path1 [path2 ... pathN]
 
 Options:
   -f          Fix the XML files instead of just showing differences
-  -i indent   Set the XML indentation (e.g., '    ' for 4 spaces or $'\t' for a tab)
+  -i    Set the XML indentation (e.g., '    ' for 4 spaces or $'\t' for a tab)
   -h, --help  Show this help message and exit
 EOF
-    exit 1
 }
 
-check_commands() {
-    for cmd in "$@"; do
-        echo "Checking dependencies..."
-        command -v "$cmd" >/dev/null 2>&1 || { echo >&2 "Error: $cmd is not installed. Please install it and try again."; exit 1; }
-    done
-}
-
-check_os() {
-    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "win32" ]]; then
-        echo "Error: This script is not compatible with Windows. Please run it in a Unix-like environment."
+main() {
+    if [ $# -eq 0 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+        usage
+        exit 0
+    fi
+    
+    check_os
+    
+    check_commands xmllint diff
+    
+    local options_output
+    if ! options_output=$(parse_options "$@"); then
+        echo ""
+        usage
         exit 1
     fi
-}
-
-process_xml_files() {
-    local dir="$1"
-
-    echo "Processing directory: $dir"
-
-    if [ ! -d "$dir" ]; then
-        echo "Directory $dir does not exist."
-        return
+    
+    # Extract values from options_output
+    local fix_files
+    local XMLLINT_INDENT
+    local paths
+    
+    fix_files=$(echo "$options_output" | cut -d'|' -f1)
+    XMLLINT_INDENT=$(echo "$options_output" | cut -d'|' -f2)
+    paths=$(echo "$options_output" | cut -d'|' -f3-)
+    
+    # If no paths are provided after parsing options, show usage
+    if [ -z "$paths" ]; then
+        usage
+        exit 0
     fi
-
-    # Loop through each file in the directory
-    for file in "$dir"/*; do
-        if [ -d "$file" ]; then
-            # If the file is a directory, then recurse into it
-            process_xml_files "$file"
-        elif [[ "$file" == *.xml ]]; then
-            # If the file is an XML file, run the diff command or fix the file
-            echo "Processing file: $file"
-            if [ "$fix_files" = true ]; then
-                XMLLINT_INDENT="$XMLLINT_INDENT" xmllint --format "$file" --output "$file"
-                echo "Fixed formatting for file: $file"
+    
+    for path in $paths; do
+        if [ -f "$path" ]; then
+            if [[ "$path" == *.xml ]]; then
+                process_xml_file "$path" "$fix_files" "$XMLLINT_INDENT"
             else
-                diff -B --tabsize=4 "$file" <(XMLLINT_INDENT="$XMLLINT_INDENT" xmllint --format "$file")
+                echo "Skipping non-XML file: $path"
             fi
+            elif [ -d "$path" ]; then
+            process_xml_files_in_directory "$path" "$fix_files" "$XMLLINT_INDENT"
         else
-            echo "Skipping non-XML file: $file"
+            echo "Error: $path is not a valid file or directory."
         fi
     done
 }
 
-# Parse command line options
-while getopts ":fi:" opt; do
-    case $opt in
-        f)
-            fix_files=true
-            ;;
-        i)
-            XMLLINT_INDENT="$OPTARG"
-            ;;
-        \?)
-            echo "Invalid option: -$OPTARG" >&2
-            usage
-            ;;
-        :)
-            echo "Option -$OPTARG requires an argument." >&2
-            usage
-            ;;
-    esac
-done
-shift $((OPTIND -1))
-
-# Check if at least one path is provided
-if [ $# -eq 0 ]; then
-    usage
-else
-    check_os
-    check_commands xmllint diff
-fi
-
-# Loop through all the provided paths
-for path in "$@"; do
-    process_xml_files "$path"
-done
+main "$@"
