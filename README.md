@@ -41,7 +41,7 @@ Run `xml_formatter.sh` with the appropriate options and paths to process XML fil
 ## Options
 
 - `-f`: Fix the XML files instead of just showing differences.
-- `-i indent`: Set the XML indentation (e.g., `''` for 4 spaces or `'$'\t'`` for a tab).
+- `-i`: Set the XML indentation (e.g., `'    '` for 4 spaces or `$'\t'` for a tab).
 - `-h, --help`: Show the help message and exit.
 
 ## Example
