@@ -8,7 +8,8 @@ fi
 
 parse_options() {
     local fix_files=false
-    local XMLLINT_INDENT="    "
+    local indent_type="space"
+    local indent_count=4
     local paths=()
     
     while [[ $# -gt 0 ]]; do
@@ -18,7 +19,19 @@ parse_options() {
                 shift
             ;;
             -i)
-                XMLLINT_INDENT="$2"
+                if [[ "$2" != "space" && "$2" != "tab" ]]; then
+                    echo "Error: -i option must be followed by 'space' or 'tab'" >&2
+                    exit 1
+                fi
+                indent_type="$2"
+                shift 2
+            ;;
+            -s)
+                if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+                    echo "Error: -s option must be followed by a positive integer" >&2
+                    exit 1
+                fi
+                indent_count="$2"
                 shift 2
             ;;
             # if an invalid option is provided
@@ -32,6 +45,15 @@ parse_options() {
             ;;
         esac
     done
+    
+    local XMLLINT_INDENT
+    
+    #use indent count only if indent type is space
+    if [[ "$indent_type" == "space" ]]; then
+        XMLLINT_INDENT=$(printf '%*s' "$indent_count" '')
+    else
+        XMLLINT_INDENT=$'\t'
+    fi
     
     # Return the options and remaining arguments
     echo "$fix_files|$XMLLINT_INDENT|${paths[*]}"

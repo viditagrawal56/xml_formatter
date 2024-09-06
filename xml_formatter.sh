@@ -11,9 +11,14 @@ usage() {
 Usage: xml_formatter.sh [OPTIONS] path1 [path2 ... pathN]
 
 Options:
-  -f          Fix the XML files instead of just showing differences
-  -i    Set the XML indentation (e.g., '    ' for 4 spaces or $'\t' for a tab)
-  -h, --help  Show this help message and exit
+  -f              Fix the XML files instead of just showing differences
+  -i <space|tab>  Set the indentation type (default: space)
+  -s <number>     Set the number of spaces for indentation (default: 4, ignored for tabs)
+  -h, --help      Show this help message and exit
+
+Examples:
+  xml_formatter.sh -f -i space -s 4 ./test.xml
+  xml_formatter.sh -f -i tab ./test.xml
 EOF
 }
 
